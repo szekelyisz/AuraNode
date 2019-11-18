@@ -141,4 +141,4 @@ Be avdised that OSC provides no secutity features at all. This means there's no 
 
 ## License
 
-AuraNode is distributed unter the conditions of the GNU General Public Lisense version 3 (GPLv3). Check [the license file](LISENSE.txt) for details.
+AuraNode is distributed unter the conditions of the GNU General Public Lisense version 3 (GPLv3). Check [the license file](LICENSE.txt) for details.
