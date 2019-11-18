@@ -22,7 +22,7 @@ SkeletonClass* SkeletonClass::sharedInstance = nullptr;
 
 #include "FS.h"
 #include "ArduinoOTA.h"
-#include "ArduinoJSON.h"
+#include "ArduinoJson.h"
 #include <ESP8266mDNS.h>
 
 #ifndef SKELETON_WIFI_SOFTAP_PASSWD
