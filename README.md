@@ -51,6 +51,12 @@ All ESP8266 and ESP8285-based board should be supported. Tested on Wemos D1 Mini
 * Acceleration and orientation sensors
 * Environmental sensors: temperature, humidity, flame, etc.
 
+### Addon modules
+
+ * ADS1115 analog to digital converter
+ * PCA9685 PWM controller
+ * PCF8574 GPIO expander
+
 ## Usage
 
 ## Quick start
