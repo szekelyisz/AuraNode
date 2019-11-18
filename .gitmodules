@@ -1,0 +1,3 @@
+[submodule "lib/OSC"]
+	path = lib/OSC
+	url = https://github.com/szekelyisz/OSC

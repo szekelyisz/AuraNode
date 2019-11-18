@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>AuraNode configuration</title>
+
+
+
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+
+	<h1>AuraNode configuration</h1>
+	<div class="pagecontent">
+		<div class="tab">
+			<button class="tablinks" onclick="showTab(event, 'wifi')"
+				id="defaultOpen">WiFi</button>
+			<button class="tablinks" onclick="showTab(event, 'network')">Network</button>
+			<button class="tablinks" onclick="showTab(event, 'interfaces')">Interfaces</button>
+		</div>
+		<form action="/bleeper" id="configform" method="POST">
+			<div class="alltabs">
+				<div class="tabcontent" id="wifi">
+					<table>
+						<tbody>
+							<tr>
+								<td>SSID:</td>
+								<td><select name="wifi.ssid" class="bleeper"></select></td>
+							</tr>
+							<tr>
+								<td>Password:</td>
+								<td><input type="text" name="wifi.passwd_new" class="bleeper" /></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="tabcontent" id="network">
+					<table>
+						<tbody>
+							<tr>
+								<td>Hostname:</td>
+								<td><input type="text" name="ip.hostname" class="bleeper" /></td>
+							<tr>
+								<td>IP address:</td>
+								<td><input type="text" name="ip.address" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Netmask:</td>
+								<td><input type="text" name="ip.netmask" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Gateway:</td>
+								<td><input type="text" name="ip.gateway" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Primary DNS:</td>
+								<td><input type="text" name="ip.dns1" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Secondary DNS:</td>
+								<td><input type="text" name="ip.dns2" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Syslog server:</td>
+								<td><input type="text" name="ip.loghost" class="bleeper" /></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="tabcontent" id="interfaces">
+					<table>
+						<tbody>
+							<tr>
+								<td>URL:</td>
+								<td><input type="text" name="interfaces.url" class="bleeper" /></td>
+							</tr>
+							<tr>
+								<td>Upload:</td>
+								<td><input type="file" name="interfacesfile" /></td>
+							</tr>
+							<tr>
+								<td>JSON:</td>
+								<td><textarea name="interfaces.json" cols="80" rows="16"
+										class="bleeper" id="interfaces.json"></textarea></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div>
+				<button class="submit">Apply &amp; reboot</button>
+			</div>
+		</form>
+	</div>
+
+	<script src="index.js"></script>
+	<script src="BleeperCustomInterface.js"></script>
+
+</body>
+
+</html>

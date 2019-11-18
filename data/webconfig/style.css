@@ -1,0 +1,104 @@
+body {
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
+
+.pagecontent {
+  width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ddd;
+}
+
+.alltabs {
+  height: 400px;
+}
+
+input,
+textarea,
+select,
+button {
+  border: none;
+  font-size: 16px;
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+td {
+  padding: 5px;
+  vertical-align: top;
+}
+
+button {
+  font-size: 18px;
+}
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  width: 200px;
+  margin: none;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ccc;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ddd;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border-top: none;
+  margin-top: 20px;
+}
+
+.tabcontent table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tabcontent textarea {
+  width: 480px;
+  height: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 12px;
+  font-family: "Lucida Console", Monaco, monospace;
+}
+
+.submit {
+  background-color: #f1f1f1;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  width: 100%;
+  margin: none;
+}
+
+.submit:hover {
+  background-color: #ccc;
+}

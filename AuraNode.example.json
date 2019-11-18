@@ -1,0 +1,149 @@
+{
+    "loghost": "192.168.1.110",
+    "destination": "192.168.1.112:5000",
+    
+    "modules": {
+        "adc1": {
+            "type": "i2c_adc",
+            "address": "0x48"
+        },
+        "gpio1": {
+            "type": "i2c_gpio",
+            "address": "0x02"
+        },
+        "pwm1": {
+            "type": "i2c_pwm",
+            "address": "0x40"
+        }
+    },
+
+    "interfaces": {
+
+        "/base_analogin": {
+            "type": "analog_in",
+            "on": {
+                "module": "base",
+                "pin": 17
+            }
+        },
+        "/i2c_analogin": {
+            "type": "analog_in",
+            "on": {
+                "module": "adc1",
+                "pin": 0
+            }
+        },
+        "/base_digitalin": {
+            "type": "digital_in",
+            "on": {
+                "module": "base",
+                "pin": 13
+            }
+        },
+        "/i2c_digitalin": {
+            "type": "digital_in",
+            "on": {
+                "module": "gpio1",
+                "pin": 14
+            }
+        },
+        "/base_digitalout": {
+            "type": "digital_out",
+            "on": {
+                "module": "base",
+                "pin": 16
+            }
+        },
+        "/i2c_digitalout": {
+            "type": "digital_out",
+            "on": {
+                "module": "gpio1",
+                "pin": 15
+            }
+        },
+        "/base_pwm": {
+        	"type": "pwm",
+        	"on": {
+        		"module": "base",
+        		"pin": 12
+        	}
+        },
+        "/i2c_pwm": {
+            "type": "pwm",
+            "on": {
+                "module": "pwm1",
+                "pin": 1
+            }
+        },
+        "/digital_strip": {
+            "type": "ledstrip",
+            "length": 300,
+            "channels": 3,
+            "on": {
+                "module": "base",
+                "pin": 3
+            }
+        },
+
+        "/analog_strip/1": {
+            "type": "rgba",
+            "r": {
+                "module": "pwm1",
+                "pin": 0,
+                "invert": true
+            },
+            "g": {
+                "module": "pwm1",
+                "pin": 1,
+                "invert": true
+            },
+            "b": {
+                "module": "pwm1",
+                "pin": 2,
+                "invert": true
+            }
+        },
+
+        "/analog_strip/2": {
+            "type": "rgba",
+            "r": {
+                "module": "pwm1",
+                "pin": 3,
+                "invert": true
+            },
+            "g": {
+                "module": "pwm1",
+                "pin": 4,
+                "invert": true
+            },
+            "b": {
+                "module": "pwm1",
+                "pin": 5,
+                "invert": true
+            }
+        },
+
+        "/base_servo": {
+            "type": "servo",
+            "on": {
+                "module": "base",
+                "pin": 13
+            }
+        },
+        "/i2c_servo": {
+            "type": "servo",
+            "on": {
+                "module": "pwm1",
+                "pin": 7
+            }
+        },
+
+        "/ir_remote": {
+        	"type": "ir",
+        	"on": {
+        		"module": "base",
+        		"pin": 14
+       		}
+        }
+    }
+}
