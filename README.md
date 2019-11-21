@@ -137,6 +137,10 @@ Type | Data format (OSC type tag)
 
 Be avdised that OSC provides no secutity features at all. This means there's no way to check that an incoming message originated from an authentic/trusted source, so any host on the same network can control actuators. The entire security of a network of nodes depends on security provided by your WiFi network. Therefore it is strongly recommended to use a dedicated, password-protected WiFi network with strong authentication such as WPA or WPA2.
 
+## Contributing
+
+Pull requests are more than welcome. If you find a bug or miss a feature, feel free to open an issue. In case you just want to make this project better, pick something to work on form the TODO list below or the [interfaces waiting to be implemented](#support-planned) above.
+
 ## TODO
 
  * Document module and interface configuration options. For now, please refer to the [example configuration file](AuraNode.example.json)
