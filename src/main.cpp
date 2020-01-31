@@ -138,7 +138,6 @@ uint16_t osc_port_remote = 5000;
 const uint16_t osc_port_local = 5000; // fixed
 WiFiUDP osc_socket;
 
-uint16_t fps_counter;
 uint32_t receive_time;
 
 std::map<String, Module::Module*> allmodules;
@@ -852,13 +851,15 @@ OSCMessage msg;
 
 auto actuator = allactuators.begin();
 
+uint16_t messages_in = 0, messages_out = 0, loop_count = 0;
+
 void loop(void) {
     Skeleton.loop();
 
     if(receive_time < millis()) {
-        logger.logf(SerialSysLog::INFO, "fps: %d, heap: %d", fps_counter,
-                ESP.getFreeHeap());
-        fps_counter = 0;
+        logger.logf(SerialSysLog::INFO, "loop: %d, in: %d, out: %d, heap: %d",
+                loop_count, messages_in, messages_out, ESP.getFreeHeap());
+        loop_count = messages_in = messages_out = 0;
         receive_time = millis() + 1000;
         // digitalWrite(2, !digitalRead(2));
     }
@@ -885,7 +886,7 @@ void loop(void) {
                 actuator->second->write(msg);
                 yield();
             }
-            fps_counter++;
+            messages_in++;
         } else {
 //			logger.logf("OSC packet error: %d / %d", msg.getError(),
 //					msg.getOSCData(0)->error);
@@ -893,10 +894,11 @@ void loop(void) {
         msg.empty();
     }
 
+    if(allsensors.size() == 0) return;
+
     if(sensor_it == allsensors.end()) {
         sensor_it = allsensors.begin();
         if(sensor_it == allsensors.end()) {
-            fps_counter++;
             delay(5);
             return;
         }
@@ -916,10 +918,13 @@ void loop(void) {
         yield();
         msg.empty();
         osc_socket.flush();
+        messages_out++;
     }
     ++sensor_it;
 
 
 //	osc_socket.flush();
 //	delay(5);
+
+    loop_count++;
 }
