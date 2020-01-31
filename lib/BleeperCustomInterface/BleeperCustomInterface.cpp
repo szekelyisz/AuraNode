@@ -66,8 +66,11 @@ bool BleeperCustomInterface::handleGet() {
     for(size_t i = 0; i < strings.size() - 1;) {
         doc[strings[i++]] = strings[i++];
     }
+
     setContentLength(measureJson(doc));
-    send(200, "text/json", "");
+    sendHeader("Access-Control-Allow-Origin", "*");
+    send(200, "text/json", nullptr);
+
     serializeJson(doc, conn);
     return true;
 }
