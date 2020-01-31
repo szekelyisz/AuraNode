@@ -44,7 +44,7 @@ public:
 
 	virtual ~BaseLEDStrip() {};
 
-	void writeValue(const uint8_t* /*in*/value, uint16_t /*in*/length) {
+	void writeValue(const uint8_t* value, uint16_t length) {
 		PIXEL* leds = (PIXEL*)value;
 		length /= CHANNELS;
 		uint16_t n = (strip.PixelCount() < length)

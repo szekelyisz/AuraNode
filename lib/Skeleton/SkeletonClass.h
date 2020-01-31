@@ -57,7 +57,7 @@ public:
 		subconfig(IPConfig, ip);
 	};
 
-	void init(SkeletonConfig* config, const char* appname);
+	bool init(SkeletonConfig* config, const char* appname);
 	void loop();
 	const char* getHostname() { return hostname; }
 
