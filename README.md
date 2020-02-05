@@ -11,8 +11,8 @@ Other features:
 * Completely dynamic configuration: all WiFi credentials, network settings, and interface configuration are stored in EEPROM, separately from firmware code. This eliminates the need to recompile the code for every node individually.
 
 * Web-based configuration: a built-in web server is used to configure the node, including WiFi and network settings.
-  
-* AP mode: a node that has no WiFi credentials set or fails to join the network will enter AP mode allowing initial configuration or fixes. 
+
+* AP mode: a node that has no WiFi credentials set or fails to join the network will enter AP mode allowing initial configuration or fixes.
 
 * OTA (Over-The-Air) firmware upgrades: new firmware can be uploaded over WiFi without need for a USB or serial connection to nodes.
 
@@ -41,6 +41,7 @@ All ESP8266 and ESP8285-based board should be supported. Tested on Wemos D1 Mini
 * PWM output (digital servo motor and RGB/RGBW LED available as an abstraction)
 * Infrared remote reader
 * addressable LED strip
+* DS18X20-based temperature sensor
 
 #### Support planned
 

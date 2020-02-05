@@ -1,7 +1,7 @@
 {
     "loghost": "192.168.1.110",
     "destination": "192.168.1.112:5000",
-    
+
     "modules": {
         "adc1": {
             "type": "i2c_adc",
@@ -144,6 +144,11 @@
         		"module": "base",
         		"pin": 14
        		}
+        },
+
+        "/temperature_ds18x20": {
+            "type": "ds18x20",
+            "pin": 12
         }
     }
 }

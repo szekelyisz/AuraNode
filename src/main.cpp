@@ -113,6 +113,10 @@
 #endif
 #endif
 
+#ifdef WITH_DS18X20
+#include <Model/Interface/DS18X20In.h>
+#endif
+
 class InterfacesConfig : public Configuration {
 public:
     persistentStringVar(url, "");
@@ -693,6 +697,18 @@ uint8_t parseConfig(const T& json) {
             IO::BaseIRCodeIn* io = new IO::BaseIRCodeIn(
                     on["pin"].as<uint8_t>());
             allsensors[*osc_path] = new Interface::IRCodeIn(io);
+            parseTarget(intf, allsensors[*osc_path]);
+            goto thing_added;
+        }
+#endif
+#ifdef WITH_DS18X20
+        else if(intf_type == "ds18x20") {
+            if(!intf.containsKey("pin") || !intf["pin"].is<uint8_t>()) {
+                logger.loge("no pin");
+                continue;
+            }
+            uint8_t pin = intf["pin"].as<uint8_t>();
+            allsensors[*osc_path] = new Interface::DS18X20In(pin);
             parseTarget(intf, allsensors[*osc_path]);
             goto thing_added;
         }
