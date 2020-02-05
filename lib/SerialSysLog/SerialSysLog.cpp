@@ -1,5 +1,5 @@
 /*
-	SerialSysLog - logger class with serial and syslog output
+    SerialSysLog - logger class with serial and syslog output
     Copyright (C) 2018 - 2019  Szabolcs Szekelyi
 
     This program is free software: you can redistribute it and/or modify
@@ -33,85 +33,96 @@ SerialSysLog::~SerialSysLog() {
 }
 
 void SerialSysLog::serialOn(uint32_t baud) {
-	Serial.begin(baud);
+    Serial.begin(baud);
 //	while (!Serial);
-	mSerialEnabled = true;
+    mSerialEnabled = true;
 }
 
 void SerialSysLog::serialOff() {
-	mSerialEnabled = false;
-	Serial.end();
+    mSerialEnabled = false;
+    Serial.end();
 }
 
 void SerialSysLog::syslogOn(const char *server, uint16_t port, const char *host,
-		const char* appname) {
-	mSyslog.server(server, port);
-	mSyslog.deviceHostname(host);
-	mSyslog.appName(appname);
-	mSyslog.defaultPriority(mDefaultPriority);
-	mSyslogEnabled = true;
+        const char* appname) {
+    mSyslog.server(server, port);
+    mSyslog.deviceHostname(host);
+    mSyslog.appName(appname);
+    mSyslog.defaultPriority(mDefaultPriority);
+    mSyslogEnabled = true;
 }
 
 void SerialSysLog::syslogOff() {
-	mSyslogEnabled = false;
+    mSyslogEnabled = false;
+}
+
+void SerialSysLog::logv(Severity prio, const char *format, va_list args) {
+    if(mSerialEnabled) {
+        va_list args_serial;
+        va_copy(args_serial, args);
+        serial_vsnprintf(format, args_serial);
+        va_end(args_serial);
+    }
+    if(mSyslogEnabled) mSyslog.vlogf(prio | LOG_KERN, format, args);
+    flush();
 }
 
 void SerialSysLog::logf(Severity prio, const char *format, ...) {
-	va_list args_syslog, args_serial;
-	va_start(args_syslog, format);
-	if(mSerialEnabled) {
-		va_copy(args_serial, args_syslog);
-	    va_start(args_serial, format);
-	    serial_vsnprintf(format, args_serial);
-	    va_end(args_serial);
-	}
-	if(mSyslogEnabled) mSyslog.vlogf(prio, format, args_syslog);
-	flush();
-	va_end(args_syslog);
+    va_list args;
+    va_start(args, format);
+    logv(prio, format, args);
+    va_end(args);
 }
 
 void SerialSysLog::logf(const char *format, ...) {
-	va_list args_syslog, args_serial;
-	va_start(args_syslog, format);
-	if(mSerialEnabled) {
-		va_copy(args_serial, args_syslog);
-	    va_start(args_serial, format);
-	    serial_vsnprintf(format, args_serial);
-	    va_end(args_serial);
-	}
-	if(mSyslogEnabled) mSyslog.vlogf(mDefaultPriority, format, args_syslog);
-	flush();
-	va_end(args_syslog);
+    va_list args;
+    va_start(args, format);
+    logv(Severity::INFO, format, args);
+    va_end(args);
 }
 
 void SerialSysLog::log(Severity prio, const char *message) {
-	if(mSerialEnabled) Serial.println(message);
-	if(mSyslogEnabled) mSyslog.log(prio, message);
-	flush();
+    if(mSerialEnabled) Serial.println(message);
+    if(mSyslogEnabled) mSyslog.log(prio, message);
+    flush();
 }
 
 void SerialSysLog::log(const char *message) {
-	if(mSerialEnabled) Serial.println(message);
-	if(mSyslogEnabled) mSyslog.log(message);
-	flush();
+    if(mSerialEnabled) Serial.println(message);
+    if(mSyslogEnabled) mSyslog.log(message);
+    flush();
+}
+
+void SerialSysLog::logfe(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    logv(Severity::ERR, format, args);
+    va_end(args);
+}
+
+void SerialSysLog::logfw(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    logv(Severity::WARN, format, args);
+    va_end(args);
 }
 
 void SerialSysLog::flush() {
-	if(mSerialEnabled) Serial.flush();
-	if(mSyslogEnabled) mSyslogSocket.flush();
+    if(mSerialEnabled) Serial.flush();
+    if(mSyslogEnabled) mSyslogSocket.flush();
 }
 
 int SerialSysLog::serial_vsnprintf(const char *format, va_list args) {
-	/* Exact copy of Print::printf since there's no variadic version
-	 * of it (Print::vprintf for example)
-	 */
+    /* Exact copy of Print::printf since there's no variadic version
+     * of it (Print::vprintf for example)
+     */
     char temp[64];
     char* buffer = temp;
     size_t len = vsnprintf(temp, sizeof(temp), format, args);
     if (len > sizeof(temp) - 1) {
         buffer = new char[len + 1];
         if (!buffer) {
-	            return 0;
+                return 0;
         }
         vsnprintf(buffer, len + 1, format, args);
     }
@@ -119,6 +130,6 @@ int SerialSysLog::serial_vsnprintf(const char *format, va_list args) {
     if (buffer != temp) {
         delete[] buffer;
     }
-    	Serial.println();
-    	return len;
+        Serial.println();
+        return len;
 }
