@@ -212,10 +212,15 @@ void parseTarget(JsonObject& js, AuraNode::Interface::Sensor* thing) {
     thing->mTargetPort = osc_port_remote;
 }
 
+int parseInteger(JsonVariantConst v) {
+    if(v.is<char*>()) return strtoul(v.as<char*>(), nullptr, 0);
+    return v.as<int>();
+}
+
 template<class T>
 uint8_t parseConfig(const T& json) {
     DynamicJsonDocument doc(JSON_BUFFER_SIZE);
-    logger.logf(SerialSysLog::INFO, "Buffer size: %d", JSON_BUFFER_SIZE);
+    logger.logf("Buffer size: %d", JSON_BUFFER_SIZE);
 
     DeserializationError err = deserializeJson(doc, (T&)json);
     if(err) {
@@ -240,7 +245,7 @@ uint8_t parseConfig(const T& json) {
             return 1;
         }
     } else {
-        logger.log(SerialSysLog::WARN, "no OSC destination");
+        logger.logw("no OSC destination");
         return 1;
     }
 
@@ -256,13 +261,13 @@ uint8_t parseConfig(const T& json) {
             // make a copy of the module name
             String* module_name = new String(it->key().c_str());
             String type = module["type"].as<String>();
-            logger.logf(SerialSysLog::INFO, "Adding module '%s' type '%s'",
+            logger.logf("Adding module '%s' type '%s'",
                     module_name->c_str(), type.c_str());
 #ifdef WITH_ADS1115
             if(type == "ads1115" || type == "i2c_adc") {
                 if(module.containsKey("address")
                         && module["address"].is<char*>()) {
-                    address = strtoul(module["address"].as<char*>(), NULL, 0);
+                    address = parseInteger(module["address"]);
                     if(address == 0 || address > 128) {
                         logger.logf("invalid address: %s",
                                 module["address"].as<char*>());
@@ -271,8 +276,8 @@ uint8_t parseConfig(const T& json) {
                         start_wire();
                         allmodules[*module_name] = new
                                 Module::ADS1115Module(address);
-                        logger.logf(SerialSysLog::INFO,
-                                "module created: address = 0x%02lx", address);
+                        logger.logf("module created: address = 0x%02lx",
+                                address);
                     }
                 } else {
                     logger.log("no address");
@@ -285,7 +290,7 @@ uint8_t parseConfig(const T& json) {
             if(type == "pcf8574" || type == "i2c_gpio") {
                 if(module.containsKey("address")
                         && module["address"].is<char*>()) {
-                    address = strtoul(module["address"].as<char*>(), NULL, 0);
+                    address = parseInteger(module["address"]);
                     if(address == 0 || address > 128) {
                         logger.logf("invalid address: %s",
                                 module["address"].as<char*>());
@@ -294,8 +299,8 @@ uint8_t parseConfig(const T& json) {
                         start_wire();
                         allmodules[*module_name] = new
                                 Module::PCF8574Module(address);
-                        logger.logf(SerialSysLog::INFO,
-                                "module created: address = 0x%02lx", address);
+                        logger.logf("module created: address = 0x%02lx",
+                                address);
                     }
                 } else {
                     logger.log("no address");
@@ -308,7 +313,7 @@ uint8_t parseConfig(const T& json) {
             if(type == "pca9685" || type == "i2c_pwm") {
                 if(module.containsKey("address")
                         && module["address"].is<char*>()) {
-                    address = strtoul(module["address"].as<char*>(), NULL, 0);
+                    address = parseInteger(module["address"]);
                     if(address == 0 || address > 128) {
                         logger.logf("invalid address: %s",
                                 module["address"].as<char*>());
@@ -317,8 +322,8 @@ uint8_t parseConfig(const T& json) {
                         start_wire();
                         allmodules[*module_name] = new
                                 Module::PCA9685Module(address);
-                        logger.logf(SerialSysLog::INFO,
-                                "module created: address = 0x%02lx", address);
+                        logger.logf("module created: address = 0x%02lx",
+                                address);
                     }
                 } else {
                     logger.log("no address");
@@ -327,7 +332,7 @@ uint8_t parseConfig(const T& json) {
                 continue;
             }
 #endif
-            logger.log(SerialSysLog::WARN, "unknown type, ignored");
+            logger.logw("unknown type, ignored");
         }
     }
 
@@ -345,14 +350,15 @@ uint8_t parseConfig(const T& json) {
         JsonObject intf = it->value();
         // make a copy of the OSC path
         String* osc_path = new String(it->key().c_str());
-        logger.logf(SerialSysLog::INFO, "Interface '%s' type '%s'",
-                osc_path->c_str(), intf["type"].as<char*>());
+        String intf_type = intf["type"].as<String>();
+        logger.logf("Interface '%s' type '%s'",
+                osc_path->c_str(), intf_type.c_str());
         if(osc_path[0][0] != '/') {
-            logger.log(SerialSysLog::WARN, "Definition ignored");
+            logger.logw("Definition ignored");
             continue;
         }
 #ifdef WITH_ANALOGIN
-        if(intf["type"].as<String>() == "analog_in") {
+        if(intf_type == "analog_in") {
             // ANALOG_IN
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -398,7 +404,7 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_DIGITALIN
-        if(intf["type"].as<String>() == "digital_in") {
+        if(intf_type == "digital_in") {
             // DIGITAL_IN
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -442,7 +448,7 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_DIGITALOUT
-        if(intf["type"].as<String>() == "digital_out") {
+        if(intf_type == "digital_out") {
             // DIGITAL_OUT
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -473,38 +479,38 @@ uint8_t parseConfig(const T& json) {
                 } else
 #endif
                 {
-                    logger.log(SerialSysLog::ERR, "wrong module");
+                    logger.loge("wrong module");
                     continue;
                 }
             } else {
-                logger.log(SerialSysLog::ERR, "module not found");
+                logger.loge("module not found");
                 continue;
             }
             allactuators[*osc_path] = new Interface::DigitalOut(io);
+            parseTarget(intf, allsensors[*osc_path]);
             goto thing_added;
         }
 #endif
 #ifdef WITH_PWM
-        if(intf["type"].as<String>() == "pwm" ||
-                intf["type"].as<String>() == "servo") {
+        if(intf_type == "pwm" || intf_type == "servo") {
             // PWM / SERVO
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
-                logger.log(SerialSysLog::ERR, "no IO");
+                logger.loge("no IO");
                 continue;
             }
             JsonObject on = intf["on"].as<JsonObject>();
             if(!on.containsKey("module") || !on["module"].is<char*>()) {
-                logger.log(SerialSysLog::ERR, "no module");
+                logger.loge("no module");
                 continue;
             }
             if(!on.containsKey("pin") || !on["pin"].is<uint8_t>()) {
-                logger.log(SerialSysLog::ERR, "no pin");
+                logger.loge("no pin");
                 continue;
             }
             IO::PWMOutput* io = parsePWM(on, doc);
             if(io) {
                 allactuators[*osc_path] =
-                    (intf["type"].as<String>() == "pwm") ?
+                    (intf_type == "pwm") ?
                             (Interface::Actuator*)new Interface::PWMOut(io) :
                             (Interface::Actuator*)new Interface::ServoOut(io);
                 goto thing_added;
@@ -514,34 +520,34 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_LEDSTRIP
-        if(intf["type"].as<String>() == "ledstrip") {
+        if(intf_type == "ledstrip") {
             // LEDSTRIP
             if(!intf.containsKey("length") ||
                     !intf["length"].is<uint16_t>()) {
-                logger.log("no length");
+                logger.loge("no length");
                 continue;
             }
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
-                logger.log("no IO");
+                logger.loge("no IO");
                 continue;
             }
             JsonObject on = intf["on"].as<JsonObject>();
             if(!on.containsKey("module") || !on["module"].is<char*>()) {
-                logger.log("no module");
+                logger.loge("no module");
                 continue;
             }
             if(!on.containsKey("pin") || !on["pin"].is<uint8_t>()) {
-                logger.log("no pin");
+                logger.loge("no pin");
                 continue;
             }
             if(on["module"].as<String>() != "base") {
-                logger.log("wrong module");
+                logger.loge("wrong module");
                 continue;
             }
             uint16_t ch = 3;
             if(intf.containsKey("channels")) {
                 if(!intf["channels"].is<uint16_t>()) {
-                    logger.log("channels must be integer");
+                    logger.loge("channels must be integer");
                     continue;
                 }
                 ch = intf["channels"].as<uint16_t>();
@@ -569,24 +575,24 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_RGBA
-        if(intf["type"].as<String>() == "rgba") {
+        if(intf_type == "rgba") {
             // RGBA
             bool has_a = false;
             if(!intf.containsKey("r") || !intf["r"].is<JsonObject>()) {
-                logger.log("no red IO");
+                logger.loge("no red IO");
                 continue;
             }
             if(!intf.containsKey("g") || !intf["g"].is<JsonObject>()) {
-                logger.log("no green IO");
+                logger.loge("no green IO");
                 continue;
             }
             if(!intf.containsKey("b") || !intf["b"].is<JsonObject>()) {
-                logger.log("no blue IO");
+                logger.loge("no blue IO");
                 continue;
             }
             if(intf.containsKey("a")) {
                 if(!intf["a"].is<JsonObject>()) {
-                    logger.log("error in amber pin");
+                    logger.loge("error in amber pin");
                     continue;
                 }
                 has_a = true;
@@ -594,40 +600,40 @@ uint8_t parseConfig(const T& json) {
 
             JsonObject r_on = intf["r"].as<JsonObject>();
             if(!r_on.containsKey("module") || !r_on["module"].is<char*>()) {
-                logger.log("no module for red");
+                logger.loge("no module for red");
                 continue;
             }
             if(!r_on.containsKey("pin") || !r_on["pin"].is<uint8_t>()) {
-                logger.log("no pin for red");
+                logger.loge("no pin for red");
                 continue;
             }
             JsonObject g_on = intf["g"].as<JsonObject>();
             if(!g_on.containsKey("module") || !g_on["module"].is<char*>()) {
-                logger.log("no module for green");
+                logger.loge("no module for green");
                 continue;
             }
             if(!g_on.containsKey("pin") || !g_on["pin"].is<uint8_t>()) {
-                logger.log("no pin for green");
+                logger.loge("no pin for green");
                 continue;
             }
             JsonObject b_on = intf["b"].as<JsonObject>();
             if(!b_on.containsKey("module") || !b_on["module"].is<char*>()) {
-                logger.log("no module for blue");
+                logger.loge("no module for blue");
                 continue;
             }
             if(!b_on.containsKey("pin") || !b_on["pin"].is<uint8_t>()) {
-                logger.log("no pin for blue");
+                logger.loge("no pin for blue");
                 continue;
             }
             JsonObject a_on = intf["a"].as<JsonObject>();
             if(has_a) {
                 if(!a_on.containsKey("module") ||
                         !a_on["module"].is<char*>()) {
-                    logger.log("no module for amber");
+                    logger.loge("no module for amber");
                     continue;
                 }
                 if(!a_on.containsKey("pin") || !a_on["pin"].is<uint8_t>()) {
-                    logger.log("no pin for amber");
+                    logger.loge("no pin for amber");
                     continue;
                 }
             }
@@ -661,23 +667,22 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_IR_IN
-        if(intf["type"].as<String>() == "ir_in") {
+        if(intf_type == "ir_in") {
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
-                logger.log("no IO");
+                logger.loge("no IO");
                 continue;
             }
             JsonObject on = intf["on"].as<JsonObject>();
             if(!on.containsKey("module") || !on["module"].is<char*>()) {
-                logger.log("no module");
+                logger.loge("no module");
                 continue;
             }
             if(!on.containsKey("pin") || !on["pin"].is<uint8_t>()) {
-                logger.log("no pin");
+                logger.loge("no pin");
                 continue;
             }
             if(on["module"].as<String>() != "base") {
-                logger.log(SerialSysLog::ERR,
-                        "IR input is supported only on base module");
+                logger.loge("IR input is supported only on base module");
                 continue;
             }
             if(!on.containsKey("pin") || !on["pin"].is<uint8_t>()) {
@@ -692,13 +697,13 @@ uint8_t parseConfig(const T& json) {
             goto thing_added;
         }
 #endif
-        logger.log(SerialSysLog::ERR, "unknown type");
+        logger.loge("unknown type");
         continue;
 thing_added:
-        logger.logf(SerialSysLog::INFO, "'%s' added", osc_path->c_str());
+        logger.logf("'%s' added", osc_path->c_str());
     }
 
-    logger.log(SerialSysLog::INFO, "Config parsed successfully");
+    logger.log("Config parsed successfully");
     return 0;
 }
 
@@ -723,8 +728,7 @@ String getConfigURL() {
 
 bool localConfig(const String& filename) {
     if (SPIFFS.exists(filename)) {
-        logger.logf(SerialSysLog::INFO, "Found config file %s",
-                filename.c_str());
+        logger.logf("Found config file %s", filename.c_str());
         File f(SPIFFS.open(filename, "r"));
         return parseConfig<Stream>((const Stream&) (f));
         f.close();
@@ -746,18 +750,18 @@ bool httpConfig(const String& config_url) {
     HTTPClient configHttpClient;
     WiFiClient netClient;
 
-    logger.logf(SerialSysLog::INFO, "Downloading %s", config_url.c_str());
+    logger.logf("Downloading %s", config_url.c_str());
 
     configHttpClient.begin(netClient, config_url);
     int httpCode = configHttpClient.GET();
 
     if(httpCode < 0) {
-        logger.log(SerialSysLog::ERR, "Download failed: connection error");
+        logger.loge("Download failed: connection error");
         configHttpClient.end();
         return false;
     } else {
         if(httpCode != HTTP_CODE_OK) {
-            logger.logf("Download failed: status %d (%s)", httpCode,
+            logger.logfw("Download failed: status %d (%s)", httpCode,
                     configHttpClient.errorToString(httpCode).c_str());
             configHttpClient.end();
             return false;
@@ -767,7 +771,7 @@ bool httpConfig(const String& config_url) {
     logger.log("Download successful");
 
     if(parseConfig<Stream>(configHttpClient.getStream())) {
-        logger.log("Config parsing failed");
+        logger.loge("Config parsing failed");
         configHttpClient.end();
         return false;
     }
@@ -806,7 +810,7 @@ bool loadConfig() {
 
     if(config_url.length()) {
         if (tryHttpConfigs(config_url, filenames)) return true;
-        logger.log(SerialSysLog::INFO, "Retrying with local config");
+        logger.log("Retrying with local config");
     } else {
         logger.log("Config URL not set, trying local file");
     }
@@ -815,7 +819,7 @@ bool loadConfig() {
     logger.log("Retrying with text configuration");
     if(config.interfaces.json.length())
         return parseConfig<String>(config.interfaces.json);
-    logger.log("No configuration found");
+    logger.logw("No configuration found");
     return false;
 }
 
@@ -857,7 +861,7 @@ void loop(void) {
     Skeleton.loop();
 
     if(receive_time < millis()) {
-        logger.logf(SerialSysLog::INFO, "loop: %d, in: %d, out: %d, heap: %d",
+        logger.logf(SerialSysLog::DEBUG, "loop: %d, in: %d, out: %d, heap: %d",
                 loop_count, messages_in, messages_out, ESP.getFreeHeap());
         loop_count = messages_in = messages_out = 0;
         receive_time = millis() + 1000;
@@ -866,8 +870,7 @@ void loop(void) {
 
     int osc_packet_size;
     while((osc_packet_size = osc_socket.parsePacket()) > 0) {
-//		logger.logf(SerialSysLog::INFO, "got %d", osc_packet_size);
-//	    logger.logf("Free heap size: %d", ESP.getFreeHeap());
+//		logger.logf(SerialSysLog::DEBUG, "got %d", osc_packet_size);
         uint8_t packet_buffer[128];
         while(osc_packet_size > 0) {
             int size = osc_socket.read(packet_buffer, 128);
@@ -880,7 +883,7 @@ void loop(void) {
         }
 
         if(!msg.hasError()) {
-//			logger.logf(SerialSysLog::INFO, "recv on '%s'", msg.getAddress());
+//			logger.logf(SerialSysLog::DEBUG, "recv on '%s'", msg.getAddress());
             actuator = allactuators.find(msg.getAddress());
             if(actuator != allactuators.end()) {
                 actuator->second->write(msg);
@@ -888,8 +891,8 @@ void loop(void) {
             }
             messages_in++;
         } else {
-//			logger.logf("OSC packet error: %d / %d", msg.getError(),
-//					msg.getOSCData(0)->error);
+//			logger.logf(SerialSysLog::DEBUG, "OSC packet error: %d / %d",
+//                  msg.getError(), msg.getOSCData(0)->error);
         }
         msg.empty();
     }
@@ -906,10 +909,11 @@ void loop(void) {
 
 //	logger.logf("Reading %s", sensor_it->first.c_str());
     if(sensor_it->second->read(msg)) {
-//		logger.logf("event on %s", sensor_it->first.c_str());
+//		logger.logf(SerialSysLog::DEBUG, "event on %s",
+//              sensor_it->first.c_str());
         osc_socket.beginPacket(sensor_it->second->mTargetIP,
                 sensor_it->second->mTargetPort);
-//		logger.logf("sending to %s:%d",
+//		logger.logf(SerialSysLog::DEBUG, "sending to %s:%d",
 //				sensor_it->second->mTargetIP.toString().c_str(),
 //				sensor_it->second->mTargetPort);
         msg.setAddress(sensor_it->first.c_str());
