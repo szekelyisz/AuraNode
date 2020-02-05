@@ -117,6 +117,10 @@
 #include <Model/Interface/DS18X20In.h>
 #endif
 
+#ifdef WITH_LM75
+#include <Model/Interface/LM75.h>
+#endif
+
 class InterfacesConfig : public Configuration {
 public:
     persistentStringVar(url, "");
@@ -709,6 +713,41 @@ uint8_t parseConfig(const T& json) {
             }
             uint8_t pin = intf["pin"].as<uint8_t>();
             allsensors[*osc_path] = new Interface::DS18X20In(pin);
+            parseTarget(intf, allsensors[*osc_path]);
+            goto thing_added;
+        }
+#endif
+#ifdef WITH_LM75
+        else if(intf_type == "lm75" || intf_type == "lm75_9-12" ||
+                intf_type == "lm75_9-12_os" || intf_type == "lm75_11" ||
+                intf_type == "tmp1x2") {
+            if(!intf.containsKey("address") ||
+                    !(intf["address"].is<uint8_t>() ||
+                            intf["address"].is<String>())) {
+                logger.loge("no address");
+                continue;
+            }
+            start_wire();
+            uint8_t address = parseInteger(intf["address"]);
+            if(intf_type == "lm75") {
+                allsensors[*osc_path] = new Interface::LM75<Generic_LM75>(
+                        Wire, address);
+            } else if(intf_type == "lm75_9-12") {
+                auto lm75 = new Interface::LM75<Generic_LM75_9_to_12Bit>(
+                        Wire, address);
+                allsensors[*osc_path] = lm75;
+            } else if(intf_type == "lm75_9-12_os") {
+                auto lm75 = new
+                        Interface::LM75<Generic_LM75_9_to_12Bit_OneShot>(
+                                Wire, address);
+                allsensors[*osc_path] = lm75;
+            } else if(intf_type == "lm75_11") {
+                allsensors[*osc_path] = new Interface::LM75<Generic_LM75_11Bit>(
+                        Wire, address);
+            } else if(intf_type == "tmp10x2") {
+                allsensors[*osc_path] = new
+                        Interface::LM75<TI_TMP102_Compatible>(Wire, address);
+            }
             parseTarget(intf, allsensors[*osc_path]);
             goto thing_added;
         }

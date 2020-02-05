@@ -42,6 +42,7 @@ All ESP8266 and ESP8285-based board should be supported. Tested on Wemos D1 Mini
 * Infrared remote reader
 * addressable LED strip
 * DS18X20-based temperature sensor
+* LM75-like temperature sensor
 
 #### Support planned
 

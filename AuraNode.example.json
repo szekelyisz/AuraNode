@@ -149,6 +149,11 @@
         "/temperature_ds18x20": {
             "type": "ds18x20",
             "pin": 12
+        },
+
+        "/temperature_lm75": {
+            "type": "lm75",
+            "address": "0x48"
         }
     }
 }
