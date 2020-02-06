@@ -31,7 +31,6 @@
 #include <Model/Interface/Actuator.h>
 #include <Model/Interface/Interface.h>
 #include <Model/Interface/Sensor.h>
-#include <Model/Interface/StreamingSensor.h>
 #include <Model/IO/FloatOut.h>
 #include <Model/Module/Module.h>
 #include <SerialSysLog.h>
@@ -150,7 +149,6 @@ uint32_t receive_time;
 
 std::map<String, Module::Module*> allmodules;
 std::map<String, Interface::Sensor*> allsensors;
-std::map<String, Interface::StreamingSensor*> allstreams;
 std::map<String, Interface::Actuator*> allactuators;
 
 auto sensor_it = allsensors.begin();
@@ -407,7 +405,6 @@ uint8_t parseConfig(const T& json) {
             Interface::AnalogIn* t = new Interface::AnalogIn(io);
             parseTarget(intf, t);
             allsensors[*osc_path] = t;
-            allstreams[*osc_path] = t;
             goto thing_added;
         }
 #endif

@@ -19,13 +19,13 @@
 #ifndef AURANODE_INTERFACE_ANALOGIN_H
 #define AURANODE_INTERFACE_ANALOGIN_H
 
-#include <Model/Interface/StreamingSensor.h>
+#include <Model/Interface/Sensor.h>
 #include <Model/IO/AnalogIn.h>
 
 namespace AuraNode {
 namespace Interface {
 
-class AnalogIn: public StreamingSensor {
+class AnalogIn: public Sensor {
 protected:
 
 	uint32_t prevValue;
