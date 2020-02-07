@@ -89,7 +89,14 @@ Modules might have type-specific attributes in the future.
 
 The module named `base` is defined by default and the name is reserved. This module represents the ESP8266 chip itself, and its I/O pins.
 
-The `interfaces` object's attributes are interface definitions. Keys are strings representing OSC addresses. In case of sensors, this is used as the OSC address when readings are sent out to the destination. With actuators, this is the OSC address the node expects data sent to for the given actuator. It must begin with a `/` character otherwise the definition is ignored. Each of them should have a mandatory string member named `type` that determines the type of the interface and also further options, most commonly the definition of the pin(s) the interface is physically connected to. See the [example configuration file](AuraNode.example.json) in the source tree for examples of defining interfaces of different types.
+The `interfaces` object's attributes are interface definitions. Keys are strings representing OSC addresses. In case of sensors, this is used as the OSC address when readings are sent out to the destination. With actuators, this is the OSC address the node expects data sent to for the given actuator. It must begin with a `/` character otherwise the definition is ignored. Each interface objects's attributes are as follows:
+
+Member | Type | Description
+-------| ---- | -----------
+**`type`** | String | Type of the interface
+`interval` | Number | Interval between sensor readings in milliseconds. 0 means "as frequently as possible". Default value: 0.
+
+Additional attributes might be required depending on the interface type, most commonly the definition of the pin(s) the interface is physically connected to. See the [example configuration file](AuraNode.example.json) in the source tree for examples of defining interfaces of different types.
 
 ## Internals
 

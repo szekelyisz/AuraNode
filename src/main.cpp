@@ -191,7 +191,13 @@ IO::PWMOutput* parsePWM(JsonObject& js, JsonDocument& doc) {
 }
 #endif
 
-void parseTarget(JsonObject& js, AuraNode::Interface::Sensor* thing) {
+int parseInteger(JsonVariantConst v) {
+    if(v.is<char*>()) return strtoul(v.as<char*>(), nullptr, 0);
+    return v.as<int>();
+}
+
+void addSensor(const String& path, const JsonObject& js,
+        AuraNode::Interface::Sensor* sensor) {
     if(js.containsKey("destination") && js["destination"].is<char*>()) {
         const char * d = js["destination"].as<char*>();
         char* port_delimiter = strchr(d, ':');
@@ -208,19 +214,25 @@ void parseTarget(JsonObject& js, AuraNode::Interface::Sensor* thing) {
             logger.log("Invalid OSC destination host");
             return;
         }
-        thing->mTargetIP = ip;
-        thing->mTargetPort = port;
+        sensor->mTargetIP = ip;
+        sensor->mTargetPort = port;
         logger.logf("destination: %s:%d", ip.toString().c_str(), port);
         return;
+    } else {
+        // fall back to default
+        sensor->mTargetIP = osc_destination_host;
+        sensor->mTargetPort = osc_port_remote;
     }
-    // fall back to default
-    thing->mTargetIP = osc_destination_host;
-    thing->mTargetPort = osc_port_remote;
-}
 
-int parseInteger(JsonVariantConst v) {
-    if(v.is<char*>()) return strtoul(v.as<char*>(), nullptr, 0);
-    return v.as<int>();
+    sensor->mInterval = 0;
+    sensor->nextTime = 0;
+
+    if(js.containsKey("interval")) {
+        sensor->mInterval = parseInteger(js["interval"]);
+    }
+
+    allsensors[path] = sensor;
+    logger.logf("'%s' added", path.c_str());
 }
 
 template<class T>
@@ -363,8 +375,12 @@ uint8_t parseConfig(const T& json) {
             logger.logw("Definition ignored");
             continue;
         }
+
+        if(false) {
+            // just for syntactic correctness if WITH_ANALOGIN is undefined
+        }
 #ifdef WITH_ANALOGIN
-        if(intf_type == "analog_in") {
+        else if(intf_type == "analog_in") {
             // ANALOG_IN
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -403,13 +419,11 @@ uint8_t parseConfig(const T& json) {
                 continue;
             }
             Interface::AnalogIn* t = new Interface::AnalogIn(io);
-            parseTarget(intf, t);
-            allsensors[*osc_path] = t;
-            goto thing_added;
+            addSensor(*osc_path, intf, t);
         }
 #endif
 #ifdef WITH_DIGITALIN
-        if(intf_type == "digital_in") {
+        else if(intf_type == "digital_in") {
             // DIGITAL_IN
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -447,13 +461,11 @@ uint8_t parseConfig(const T& json) {
                 logger.log("module not found");
                 continue;
             }
-            allsensors[*osc_path] = new Interface::DigitalIn(io);
-            parseTarget(intf, allsensors[*osc_path]);
-            goto thing_added;
+            addSensor(*osc_path, intf, new Interface::DigitalIn(io));
         }
 #endif
 #ifdef WITH_DIGITALOUT
-        if(intf_type == "digital_out") {
+        else if(intf_type == "digital_out") {
             // DIGITAL_OUT
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.log("no IO");
@@ -492,12 +504,10 @@ uint8_t parseConfig(const T& json) {
                 continue;
             }
             allactuators[*osc_path] = new Interface::DigitalOut(io);
-            parseTarget(intf, allsensors[*osc_path]);
-            goto thing_added;
         }
 #endif
 #ifdef WITH_PWM
-        if(intf_type == "pwm" || intf_type == "servo") {
+        else if(intf_type == "pwm" || intf_type == "servo") {
             // PWM / SERVO
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.loge("no IO");
@@ -518,14 +528,13 @@ uint8_t parseConfig(const T& json) {
                     (intf_type == "pwm") ?
                             (Interface::Actuator*)new Interface::PWMOut(io) :
                             (Interface::Actuator*)new Interface::ServoOut(io);
-                goto thing_added;
             } else {
                 continue;
             }
         }
 #endif
 #ifdef WITH_LEDSTRIP
-        if(intf_type == "ledstrip") {
+        else if(intf_type == "ledstrip") {
             // LEDSTRIP
             if(!intf.containsKey("length") ||
                     !intf["length"].is<uint16_t>()) {
@@ -564,7 +573,6 @@ uint8_t parseConfig(const T& json) {
                         RgbColor, 3>(on["pin"].as<uint8_t>(),
                                 intf["length"].as<uint16_t>());
                 allactuators[*osc_path] = new Interface::LEDStripOut(io);
-                goto thing_added;
             } else if(ch == 4) {
                 auto io = new IO::BaseLEDStrip<
                         NeoGrbwFeature,
@@ -572,7 +580,6 @@ uint8_t parseConfig(const T& json) {
                         RgbwColor, 4>(on["pin"].as<uint8_t>(),
                                 intf["length"].as<uint16_t>());
                 allactuators[*osc_path] = new Interface::LEDStripOut(io);
-                goto thing_added;
             } else {
                 logger.log("channels must be 3 or 4");
                 continue;
@@ -580,7 +587,7 @@ uint8_t parseConfig(const T& json) {
         }
 #endif
 #ifdef WITH_RGBA
-        if(intf_type == "rgba") {
+        else if(intf_type == "rgba") {
             // RGBA
             bool has_a = false;
             if(!intf.containsKey("r") || !intf["r"].is<JsonObject>()) {
@@ -666,13 +673,13 @@ uint8_t parseConfig(const T& json) {
                     continue;
                 }
             }
-            allactuators[*osc_path] = (Interface::Actuator*)new
-                    Interface::RGBAOut(r_io, g_io, b_io, a_io);
-            goto thing_added;
+            allactuators[*osc_path] =
+                    (Interface::Actuator*)new Interface::RGBAOut(
+                            r_io, g_io, b_io, a_io);
         }
 #endif
 #ifdef WITH_IR_IN
-        if(intf_type == "ir_in") {
+        else if(intf_type == "ir_in") {
             if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
                 logger.loge("no IO");
                 continue;
@@ -697,9 +704,7 @@ uint8_t parseConfig(const T& json) {
 
             IO::BaseIRCodeIn* io = new IO::BaseIRCodeIn(
                     on["pin"].as<uint8_t>());
-            allsensors[*osc_path] = new Interface::IRCodeIn(io);
-            parseTarget(intf, allsensors[*osc_path]);
-            goto thing_added;
+            addSensor(*osc_path, intf, new Interface::IRCodeIn(io));
         }
 #endif
 #ifdef WITH_DS18X20
@@ -709,9 +714,7 @@ uint8_t parseConfig(const T& json) {
                 continue;
             }
             uint8_t pin = intf["pin"].as<uint8_t>();
-            allsensors[*osc_path] = new Interface::DS18X20In(pin);
-            parseTarget(intf, allsensors[*osc_path]);
-            goto thing_added;
+            addSensor(*osc_path, intf, new Interface::DS18X20In(pin));
         }
 #endif
 #ifdef WITH_LM75
@@ -727,32 +730,32 @@ uint8_t parseConfig(const T& json) {
             start_wire();
             uint8_t address = parseInteger(intf["address"]);
             if(intf_type == "lm75") {
-                allsensors[*osc_path] = new Interface::LM75<Generic_LM75>(
-                        Wire, address);
+                addSensor(*osc_path, intf,
+                        new Interface::LM75<Generic_LM75>(
+                                Wire, address));
             } else if(intf_type == "lm75_9-12") {
-                auto lm75 = new Interface::LM75<Generic_LM75_9_to_12Bit>(
-                        Wire, address);
-                allsensors[*osc_path] = lm75;
+                addSensor(*osc_path, intf,
+                        new Interface::LM75<Generic_LM75_9_to_12Bit>(
+                                Wire, address));
             } else if(intf_type == "lm75_9-12_os") {
-                auto lm75 = new
-                        Interface::LM75<Generic_LM75_9_to_12Bit_OneShot>(
-                                Wire, address);
-                allsensors[*osc_path] = lm75;
+                addSensor(*osc_path, intf,
+                        new Interface::LM75<Generic_LM75_9_to_12Bit_OneShot>(
+                                Wire, address));
             } else if(intf_type == "lm75_11") {
-                allsensors[*osc_path] = new Interface::LM75<Generic_LM75_11Bit>(
-                        Wire, address);
+                addSensor(*osc_path, intf,
+                        new Interface::LM75<Generic_LM75_11Bit>(
+                                Wire, address));
             } else if(intf_type == "tmp10x2") {
-                allsensors[*osc_path] = new
-                        Interface::LM75<TI_TMP102_Compatible>(Wire, address);
+                addSensor(*osc_path, intf,
+                        new Interface::LM75<TI_TMP102_Compatible>(
+                                Wire, address));
             }
-            parseTarget(intf, allsensors[*osc_path]);
-            goto thing_added;
         }
 #endif
-        logger.loge("unknown type");
-        continue;
-thing_added:
-        logger.logf("'%s' added", osc_path->c_str());
+        else {
+            logger.loge("unknown type");
+            continue;
+        }
     }
 
     logger.log("Config parsed successfully");
@@ -898,7 +901,8 @@ void setup(void) {
 
     sensor_it = allsensors.begin();
     osc_socket.begin(osc_port_local);
-    logger.log(SerialSysLog::INFO, "Init done");
+    logger.logf("Init done: %d sensors, %d actuators",
+            allsensors.size(), allactuators.size());
     logger.logf("Free heap size: %d", ESP.getFreeHeap());
     receive_time = millis() + 1000;
 }
@@ -919,6 +923,8 @@ void loop(void) {
         receive_time = millis() + 1000;
         // digitalWrite(2, !digitalRead(2));
     }
+
+    loop_count++;
 
     int osc_packet_size;
     while((osc_packet_size = osc_socket.parsePacket()) > 0) {
@@ -951,36 +957,23 @@ void loop(void) {
 
     if(allsensors.size() == 0) return;
 
-    if(sensor_it == allsensors.end()) {
-        sensor_it = allsensors.begin();
-        if(sensor_it == allsensors.end()) {
-            delay(5);
-            return;
+    if(sensor_it == allsensors.end()) sensor_it = allsensors.begin();
+    Interface::Sensor* sensor = sensor_it->second;
+
+    if(sensor->nextTime < millis()) {
+        sensor->nextTime = millis() + sensor->mInterval;
+
+//        logger.logf("Reading %s", sensor_it->first.c_str());
+        if(sensor->read(msg)) {
+            osc_socket.beginPacket(sensor->mTargetIP, sensor->mTargetPort);
+            msg.setAddress(sensor_it->first.c_str());
+            msg.send(osc_socket);
+            yield();
+            msg.empty();
+            osc_socket.flush();
+            messages_out++;
         }
     }
 
-//	logger.logf("Reading %s", sensor_it->first.c_str());
-    if(sensor_it->second->read(msg)) {
-//		logger.logf(SerialSysLog::DEBUG, "event on %s",
-//              sensor_it->first.c_str());
-        osc_socket.beginPacket(sensor_it->second->mTargetIP,
-                sensor_it->second->mTargetPort);
-//		logger.logf(SerialSysLog::DEBUG, "sending to %s:%d",
-//				sensor_it->second->mTargetIP.toString().c_str(),
-//				sensor_it->second->mTargetPort);
-        msg.setAddress(sensor_it->first.c_str());
-        msg.send(osc_socket);
-//		osc_socket.endPacket();
-        yield();
-        msg.empty();
-        osc_socket.flush();
-        messages_out++;
-    }
     ++sensor_it;
-
-
-//	osc_socket.flush();
-//	delay(5);
-
-    loop_count++;
 }

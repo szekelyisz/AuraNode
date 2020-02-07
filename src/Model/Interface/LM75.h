@@ -29,15 +29,12 @@ template<typename T> class LM75: public Sensor {
 public:
     LM75(TwoWire& bus, uint8_t address)
     : mSensor(&bus, address)
-    , mLastTime(0)
     , prevValue(0)
     {
     }
     virtual ~LM75() {};
 
     bool read(OSCMessage& msg) {
-        if(millis() < mLastTime + 1000) return false;
-        mLastTime = millis();
         float result = mSensor.readTemperatureC();
         if(result != prevValue) {
             msg.add(result);
@@ -48,7 +45,6 @@ public:
     }
 
     bool forceRead(OSCMessage& msg) {
-        mLastTime = millis();
         float result = mSensor.readTemperatureC();
         msg.add(result);
         prevValue = result;
@@ -57,7 +53,6 @@ public:
 
 private:
     T mSensor;
-    uint32_t mLastTime;
     float prevValue;
 };
 

@@ -30,6 +30,8 @@ public:
 
 	IPAddress mTargetIP;
 	uint16_t mTargetPort;
+	uint32_t mInterval = 0;
+	uint32_t nextTime = 0;
 
 	virtual bool read(OSCMessage& msg) = 0;
 	virtual bool forceRead(OSCMessage& msg) = 0;
