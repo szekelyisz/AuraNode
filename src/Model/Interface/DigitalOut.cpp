@@ -26,8 +26,8 @@ DigitalOut::DigitalOut(::AuraNode::IO::DigitalOut* io) : mPin(io) {
 }
 
 void DigitalOut::write(OSCMessage& msg) {
-	if(!msg.isBoolean(0)) return;
-	mPin->writeValue(msg.getBoolean(0));
+	if(msg.isBoolean(0)) mPin->writeValue(msg.getBoolean(0));
+	else if(msg.isInt(0)) mPin->writeValue(msg.getInt(0));
 }
 
 }
