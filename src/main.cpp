@@ -120,6 +120,12 @@
 #include <Model/Interface/LM75.h>
 #endif
 
+#ifdef WITH_HTU21D
+#include <Model/Interface/HTU21DTemperatureIn.h>
+#include <Model/Interface/HTU21DHumidityIn.h>
+#include <Model/Module/HTU21DModule.h>
+#endif
+
 class InterfacesConfig : public Configuration {
 public:
     persistentStringVar(url, "");
@@ -347,6 +353,14 @@ uint8_t parseConfig(const T& json) {
                     logger.log("no address");
                     return 1;
                 }
+                continue;
+            }
+#endif
+#ifdef WITH_HTU21D
+            if(type == "htu21d" ) {
+                start_wire();
+                allmodules[*module_name] = new Module::HTU21DModule();
+                logger.logf("module created");
                 continue;
             }
 #endif
@@ -752,6 +766,47 @@ uint8_t parseConfig(const T& json) {
             }
         }
 #endif
+#ifdef WITH_HTU21D
+        else if(intf_type == "htu21d_temperature") {
+            if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
+                logger.loge("no IO");
+                continue;
+            }
+            JsonObject on = intf["on"].as<JsonObject>();
+            if(!on.containsKey("module") || !on["module"].is<char*>()) {
+                logger.loge("no module");
+                continue;
+            }
+            if(doc["modules"][on["module"].as<char*>()]["type"].as<String>()
+                    != "htu21d") {
+                logger.loge("wrong module type");
+                continue;
+            }
+            addSensor(*osc_path, intf,
+                    new Interface::HTU21DTemperatureIn((Module::HTU21DModule*)
+                            allmodules[on["module"].as<char*>()]));
+        }
+        else if(intf_type == "htu21d_humidity") {
+            if(!intf.containsKey("on") || !intf["on"].is<JsonObject>()) {
+                logger.loge("no IO");
+                continue;
+            }
+            JsonObject on = intf["on"].as<JsonObject>();
+            if(!on.containsKey("module") || !on["module"].is<char*>()) {
+                logger.loge("no module");
+                continue;
+            }
+            if(doc["modules"][on["module"].as<char*>()]["type"].as<String>()
+                    != "htu21d") {
+                logger.loge("wrong module type");
+                continue;
+            }
+            addSensor(*osc_path, intf,
+                    new Interface::HTU21DHumidityIn((Module::HTU21DModule*)
+                            allmodules[on["module"].as<char*>()]));
+        }
+#endif
+
         else {
             logger.loge("unknown type");
             continue;

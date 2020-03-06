@@ -1,3 +1,6 @@
 [submodule "lib/OSC"]
 	path = lib/OSC
 	url = https://github.com/szekelyisz/OSC
+[submodule "lib/SparkFun_HTU21D_Breakout_Arduino_Library"]
+	path = lib/SparkFun_HTU21D_Breakout_Arduino_Library
+	url = https://github.com/sparkfun/SparkFun_HTU21D_Breakout_Arduino_Library
