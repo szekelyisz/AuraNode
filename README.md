@@ -135,7 +135,7 @@ Different types of interfaces accept/provide data in specific formats.
 Type | Data format (OSC type tag)
 ---- | --------------------------
 `analog_in` | `i`: reading value as a 16-bit integer encoded on 32 bits
-`digital_in`, `digital_out` | `T`/`F`: boolean, true for high, false for low -- note that the type specifies the value; no bytes are allocated in the message data
+`digital_in`, `digital_out` | `T`/`F`: boolean: true for high, false for low -- note that the type specifies the value; no bytes are allocated in the message data *or*<br>`i`: 0 for low, non-0 for high
 `pwm` | `i`: 16-bit integer value encoded as a 32-bit integer *or*<br>`f`: 32-bit float value normalized to [0,1] interval
 `ledstrip` | `b`: blob of raw pixel data as expected by the attached LED strip
 `rgba` | `i`: 32 bits of RGBA color encoded as 0xRRGGBBAA *or*<br>`[i/f][i/f][i/f][i/f]`: each component encoded separately as 16-bit integers encoded as 32-bit integers or 32-bit float values normalized to [0,1] interval

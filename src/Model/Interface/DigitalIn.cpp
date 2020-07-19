@@ -32,7 +32,7 @@ DigitalIn::DigitalIn(::AuraNode::IO::DigitalIn* pin)
 bool DigitalIn::read(OSCMessage& msg) {
 	bool value = mPin->readValue();
 	if(value == prevValue) return false;
-	msg.add((bool)value);
+	msg.add(value ? 1 : 0);
 	prevValue = value;
 	return true;
 }
