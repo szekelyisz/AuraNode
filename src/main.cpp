@@ -857,8 +857,8 @@ bool tryLocalConfigs(const std::vector<String>& filenames) {
 }
 
 bool httpConfig(const String& config_url) {
-    HTTPClient configHttpClient;
     WiFiClient netClient;
+    HTTPClient configHttpClient;
 
     logger.logf("Downloading %s", config_url.c_str());
 
